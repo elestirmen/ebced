@@ -35,6 +35,7 @@ export const DEFAULT_OPTIONS = {
   hamzaSeat: 'carrier', // ؤ ئ: taşıyıcı harf (6/10) ya da elif gibi (1)
   madda: 1, // آ: tek elif 1 ya da iki elif 2
   shadda: 'once', // şeddeli harf: bir kez ya da iki kez
+  latin: 'convert', // Latin harfli kelimeler: Arap harfine çevrilir ya da hesaba katılmaz (arayüz ayarı)
 };
 
 // Harf varyantları → temel harf. Değeri seçeneğe bağlı olanlar (ة ء ؤ ئ آ) ayrıca ele alınır.

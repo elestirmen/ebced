@@ -134,6 +134,7 @@ textarea {
   background: var(--bg);
   padding: 12px 14px;
   font-family: var(--ar); font-size: 1.6rem; line-height: 1.9;
+  text-align: start;
 }
 textarea::placeholder { font-family: var(--ui); font-size: 0.95rem; color: var(--muted); }
 textarea::selection { background: var(--sel); }
@@ -311,3 +312,113 @@ select {
 .toast { left: 50%; bottom: 24px; transform: translateX(-50%); padding: 8px 14px; font-size: 0.88rem; }
 
 .foot { max-width: 1240px; margin: 0 auto; padding: 0 20px 32px; color: var(--muted); font-size: 0.8rem; }
+
+/* ---------------------------------------------------------------- Latin harfli kelimeler */
+
+.latin {
+  margin-top: 10px;
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface-2);
+  padding: 10px 12px;
+}
+.latin-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.latin-head b { font-size: 0.9rem; margin-inline-end: 6px; }
+.latin-rows { display: grid; gap: 6px; }
+.lr {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 5px 10px;
+}
+.lr-src { font-weight: 500; min-width: 6ch; }
+.lr-src i { font-style: normal; color: var(--muted); font-size: 0.8rem; font-weight: 400; }
+.lr-arrow { color: var(--muted); }
+.lr-ar {
+  width: 9.5em; min-width: 0;
+  font-family: var(--ar); font-size: 1.4rem; line-height: 1.3;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--bg);
+  padding: 1px 8px; color: var(--ink);
+}
+.lr-ar:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.lr-val { font-variant-numeric: tabular-nums; min-width: 4.5ch; }
+.tag { font-size: 0.72rem; border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
+.tag.dict { background: var(--accent-soft); color: var(--accent); }
+.tag.guess { background: var(--gold-soft); color: var(--gold); }
+.tag.edit { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
+.lr-reset { font-size: 0.78rem; }
+.lr-alts { display: flex; gap: 4px; flex-wrap: wrap; margin-inline-start: auto; }
+.alt {
+  font-family: var(--ar); font-size: 1.15rem; line-height: 1.3;
+  border: 1px solid var(--line); background: transparent; border-radius: 8px; padding: 0 8px; cursor: pointer;
+}
+.alt:hover { border-color: var(--accent); }
+.alt[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.opt-grid b.ex { font-size: 0.85rem; color: var(--muted); }
+.opt-grid b.ex span { font-size: 1.15rem; }
+
+/* ---------------------------------------------------------------- Ebced nedir? */
+
+.brand > div { flex: 1; min-width: 0; }
+.learn-btn { flex: none; align-self: center; background: var(--surface); font-weight: 500; }
+@media (max-width: 520px) {
+  .brand { flex-wrap: wrap; }
+  .learn-btn { order: 3; width: 100%; }
+}
+
+.learn {
+  width: min(780px, calc(100vw - 32px));
+  max-height: min(88vh, 960px);
+  padding: 0;
+  border: 1px solid var(--line); border-radius: 18px;
+  background: var(--surface); color: var(--ink);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 25%);
+  overflow: hidden;
+}
+.learn[open] { display: flex; flex-direction: column; }
+.learn::backdrop { background: rgb(20 24 26 / 55%); }
+.learn-head {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 14px 18px; border-bottom: 1px solid var(--line);
+}
+.learn-head h2 { font-size: 1.15rem; }
+.learn-body { overflow-y: auto; padding: 6px 22px 22px; line-height: 1.65; }
+.learn-body section { scroll-margin-top: 56px; }
+.learn-body h3 { font-size: 1rem; margin: 20px 0 6px; color: var(--accent); }
+.learn-body p, .learn-body ul { margin: 0 0 10px; }
+.learn-body ul { padding-inline-start: 20px; }
+.learn-body li { margin-bottom: 6px; }
+.learn-body a { color: var(--accent); }
+.learn-body [lang="ar"] { font-size: 1.2em; }
+.learn-toc {
+  position: sticky; top: 0; z-index: 1;
+  display: flex; gap: 4px 12px; flex-wrap: wrap;
+  background: var(--surface); padding: 10px 0 8px; border-bottom: 1px dashed var(--line);
+  font-size: 0.82rem;
+}
+.learn-toc a { color: var(--muted); text-decoration: none; }
+.learn-toc a:hover { color: var(--accent); text-decoration: underline; }
+.learn-groups { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+.lg {
+  display: grid; justify-items: center; gap: 2px;
+  border: 1px solid var(--line); border-radius: 10px; padding: 4px 10px 6px; min-width: 86px;
+}
+.lg b { font-family: var(--ar); font-weight: 400; font-size: 1.4rem; line-height: 1.3; }
+.lg span { font-size: 0.78rem; }
+.lg small { font-size: 0.7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.learn-ex {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: var(--surface-2); border-radius: 12px; padding: 8px 12px; margin: 0 0 10px;
+}
+.learn-ex .breakdown { flex: 1; max-height: none; }
+.learn-ex .eq { font-weight: 600; font-size: 1.25rem; font-variant-numeric: tabular-nums; color: var(--accent); }
+.learn-ex .word-sum { display: inline-flex; align-items: center; gap: 4px; }
+.learn-ex .word-sum:not(:last-child) { padding-inline-end: 8px; margin-inline-end: 4px; border-inline-end: 1px solid var(--line); }
+.learn-dl { margin: 0 0 10px; display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; }
+.learn-dl dt { font-weight: 600; }
+.learn-dl dd { margin: 0; }
+@media (max-width: 560px) {
+  .learn { width: 100vw; max-width: 100vw; max-height: 100dvh; height: 100dvh; border-radius: 0; margin: 0; }
+  .learn-body { padding: 4px 16px 20px; }
+  .learn-body section { scroll-margin-top: 90px; }
+  .learn-dl { grid-template-columns: 1fr; }
+  .learn-dl dd { margin-bottom: 6px; }
+}

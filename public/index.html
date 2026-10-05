@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
   <header class="top">
@@ -19,6 +19,7 @@
         <h1>Ebced</h1>
         <p>Arapça metnin ebced değerini hesaplayın. Metnin bir kısmını fareyle seçin, o kısmın değeri anında görünsün.</p>
       </div>
+      <button type="button" class="btn learn-btn" data-open-learn aria-haspopup="dialog">Ebced nedir?</button>
     </div>
   </header>
 
@@ -39,9 +40,21 @@
           <button type="button" class="chip" data-sample="tevhid">Kelime-i tevhid</button>
           <button type="button" class="chip" data-sample="ihlas">İhlâs</button>
           <button type="button" class="chip" data-sample="fetih">Beldetün tayyibetün</button>
+          <button type="button" class="chip" data-sample="latin">Latin harfle: Ahmet Mehmet…</button>
         </div>
-        <textarea id="text" dir="rtl" lang="ar" spellcheck="false" rows="3"
-          placeholder="Arapça metni buraya yazın ya da yapıştırın…" aria-label="Arapça metin"></textarea>
+        <textarea id="text" dir="auto" spellcheck="false" rows="3"
+          placeholder="Arapça metni ya da Latin harfle bir ismi (ör. Ahmet) buraya yazın…" aria-label="Metin"></textarea>
+        <div class="latin" id="latin" hidden>
+          <div class="latin-head">
+            <div>
+              <b>Latin harfle yazılanlar</b>
+              <span class="muted">Arap harfiyle yazılışı önerildi ve hesaba katıldı. Yanlışsa kutudan düzeltin.</span>
+            </div>
+            <button type="button" class="btn small" id="btn-latin-apply">Metne Arap harfiyle yaz</button>
+          </div>
+          <div class="latin-rows" id="latin-rows"></div>
+          <p class="note" id="latin-more" hidden></p>
+        </div>
         <div class="kbd" id="kbd" hidden></div>
         <p class="note" id="unknown-note" hidden></p>
       </section>
@@ -88,7 +101,8 @@
           <p class="note">Mağribî sıralamada altı harf farklıdır: <span lang="ar">ص</span> 60, <span lang="ar">ض</span> 90,
             <span lang="ar">س</span> 300, <span lang="ar">ظ</span> 800, <span lang="ar">غ</span> 900, <span lang="ar">ش</span> 1000.
             Cümel-i sağîrde her harfin değeri 12’ye bölünür, kalan alınır. Farsça/Osmanlıca <span lang="ar">پ چ ژ گ ڭ</span>
-            harfleri <span lang="ar">ب ج ز ك ك</span> gibi sayılır.</p>
+            harfleri <span lang="ar">ب ج ز ك ك</span> gibi sayılır.
+          <button type="button" class="link" data-open-learn>Ebced hakkında daha fazlası</button></p>
         </div>
       </section>
     </div>
@@ -121,6 +135,12 @@
       <details class="card c-opt" id="opts">
         <summary><h2>Hesap ayarları</h2><span class="muted" id="opt-summary"></span></summary>
         <div class="opt-grid">
+          <label><span>Latin harfli kelimeler <b class="ex">Ahmet → <span lang="ar">احمد</span></b></span>
+            <select data-opt="latin">
+              <option value="convert">Arap harfine çevir</option>
+              <option value="ignore">Hesaba katma</option>
+            </select>
+          </label>
           <label><span>Tâ-i merbûta <b lang="ar">ة</b></span>
             <select data-opt="taMarbuta">
               <option value="400">Açık te gibi — 400</option>
@@ -164,10 +184,104 @@
     <p>Hesap tamamen tarayıcınızda yapılır; metin hiçbir yere gönderilmez.</p>
   </footer>
 
+  <dialog class="learn" id="learn" aria-labelledby="learn-title">
+    <div class="learn-head">
+      <h2 id="learn-title">Ebced nedir?</h2>
+      <button type="button" class="btn ghost small" id="learn-close" aria-label="Kapat">Kapat ✕</button>
+    </div>
+    <div class="learn-body">
+      <nav class="learn-toc" aria-label="Bölümler">
+        <a href="#l-tanim">Tanım</a><a href="#l-koken">Kökeni</a><a href="#l-degerler">Harf değerleri</a>
+        <a href="#l-hesap">Nasıl hesaplanır?</a><a href="#l-kullanim">Kullanım alanları</a>
+        <a href="#l-sistemler">Hesap sistemleri</a><a href="#l-dikkat">Dikkat edilecekler</a>
+      </nav>
+
+      <section id="l-tanim">
+        <h3>Tanım</h3>
+        <p><b>Ebced</b>, Arap alfabesindeki her harfe bir sayı değeri veren ve bir kelimenin değerini harflerinin
+          toplamıyla bulan hesap sistemidir. Arapçada <i>hisâbü’l-cümel</i> (cümel hesabı) denir. Adını sistemin ilk
+          dört harfinden alır: <span lang="ar">ا ب ج د</span> (elif 1, be 2, cim 3, dal 4) → <span lang="ar">ابجد</span>.</p>
+      </section>
+
+      <section id="l-koken">
+        <h3>Kökeni</h3>
+        <p>Harflerin bu sırası Arap alfabesinden çok daha eskidir: Fenike, İbrani ve Süryani alfabelerinin sırasıdır.
+          Bu alfabelerde harfler aynı zamanda rakam olarak kullanılıyordu; Araplar da sıralamayı ve sayı değerlerini
+          onlardan aldı. Eski sıralamada bulunmayan altı Arap harfi (<span lang="ar">ث خ ذ ض ظ غ</span>) sona eklendi;
+          “sehaz” ve “dazağ” kelimeleri bu yüzden en büyük değerleri taşır.</p>
+        <p>Bugün kullandığımız Hint-Arap rakamları yaygınlaşmadan önce sayılar bu harflerle yazılırdı. Alfabe sırası
+          (<span lang="ar">ا ب ت ث</span> …) sonradan, harflerin şekil benzerliğine göre düzenlenmiştir; ebced sırası ise
+          sayı değerleriyle birlikte yaşamaya devam etmiştir.</p>
+      </section>
+
+      <section id="l-degerler">
+        <h3>Harf değerleri</h3>
+        <p>İlk dokuz harf birler (1–9), sonraki dokuz harf onlar (10–90), sonraki dokuz harf yüzler (100–900) basamağıdır;
+          son harf <span lang="ar">غ</span> (ğayın) 1000’dir. Sıra, akılda kalsın diye sekiz kelimede toplanır:</p>
+        <div class="learn-groups" id="learn-groups"></div>
+        <p class="muted">Tam cetvel sayfadaki <button type="button" class="link" data-goto-tab="tab-table">Ebced cetveli</button> sekmesinde.</p>
+      </section>
+
+      <section id="l-hesap">
+        <h3>Nasıl hesaplanır?</h3>
+        <p>Kelimedeki harflerin değerleri toplanır. Kural: <b>okunan değil, yazılan harf sayılır.</b> Harekeler
+          (üstün, esre, ötre), tenvin ve cezm sayılmaz; şeddeli harf bir kez sayılır.</p>
+        <div class="learn-ex" data-example="محمد"></div>
+        <div class="learn-ex" data-example="بسم الله الرحمن الرحيم" data-sample="besmele"></div>
+        <p>Bazı harflerde gelenekler ayrılır: kapalı te (<span lang="ar">ة</span>) çoğunlukla açık te gibi 400 sayılır,
+          kimi hesaplarda he gibi 5; hemze (<span lang="ar">ء</span>) ve medli elif (<span lang="ar">آ</span>) elif gibi 1
+          sayılır. Sayfadaki <b>Hesap ayarları</b> bu tercihleri değiştirmenizi sağlar.</p>
+      </section>
+
+      <section id="l-kullanim">
+        <h3>Kullanım alanları</h3>
+        <ul>
+          <li><b>Tarih düşürme.</b> Osmanlı edebiyatında bir olayın yılı, harflerinin toplamı o yılı veren bir mısra ya
+            da ifadeyle bildirilirdi. En bilineni İstanbul’un fethidir: Kur’an’daki <span lang="ar">بلدة طيبة</span>
+            (“güzel bir şehir”, Sebe 34/15) ifadesi 857 eder; bu da fethin hicrî yılıdır (1453).</li>
+          <li><b>Rakam yerine.</b> Matematik, astronomi ve takvim cetvellerinde, kitap ve sayfa numaralarında harfler
+            rakam olarak kullanıldı.</li>
+          <li><b>Kitabeler ve mezar taşları.</b> Cami, çeşme ve türbe kitabelerinin son mısraı çoğu zaman yapım yılını
+            ebcedle verir.</li>
+          <li><b>Kısaltma.</b> Özellikle Hint alt kıtasında besmele yerine değeri olan <b>786</b> yazılır.</li>
+        </ul>
+        <div class="learn-ex" data-example="بلدة طيبة" data-sample="fetih"></div>
+      </section>
+
+      <section id="l-sistemler">
+        <h3>Hesap sistemleri</h3>
+        <dl class="learn-dl">
+          <dt>Cümel-i kebîr</dt><dd>Standart değerler (1–1000). Tarih düşürmede kullanılan tek sistemdir.</dd>
+          <dt>Cümel-i sağîr</dt><dd>Her harfin değerinden, kendisinden küçük bir sayı kalana kadar 12 çıkarılır
+            (12’ye bölümünden kalan): kef 20 → 8; sin 60 ve hı 600 → 0.</dd>
+          <dt>Mağribî</dt><dd>Kuzey Afrika ve Endülüs’te kullanılan sıralama; altı harfin değeri farklıdır
+            (<span lang="ar">ص</span> 60, <span lang="ar">ض</span> 90, <span lang="ar">س</span> 300, <span lang="ar">ظ</span> 800,
+            <span lang="ar">غ</span> 900, <span lang="ar">ش</span> 1000).</dd>
+          <dt>Cümel-i asğar</dt><dd>Harflerin adlarının değerleri toplanır (elif = <span lang="ar">الف</span> = 111).
+            Bu sayfada hesaplanmaz; harf adlarının yazılışı kaynaklara göre değişir.</dd>
+        </dl>
+      </section>
+
+      <section id="l-dikkat">
+        <h3>Dikkat edilecekler</h3>
+        <ul>
+          <li>Latin harfle yazılan isimler Arap harfine çevrilirken önce sözlüğe bakılır; sözlükte olmayanlar
+            <i>tahmin</i> diye işaretlenir. Aynı ses farklı harflerle yazılabildiği için (h → <span lang="ar">ح ه خ</span>)
+            yazılışı kontrol edin.</li>
+          <li>Aynı kelimenin farklı yazımları (ör. <span lang="ar">فاطمة</span> / Osmanlıca <span lang="ar">فاطمه</span>)
+            farklı değer verir.</li>
+          <li>Ebced bir yazı ve sayı sistemidir. Ondan gelecek, kader ya da kişilik çıkarmaya yönelik yorumların bilimsel
+            bir dayanağı yoktur; bu tür yorumlar tarih boyunca tartışılmış, İbn Haldun gibi âlimlerce eleştirilmiştir.</li>
+        </ul>
+        <p class="muted">Kaynak: <a href="https://islamansiklopedisi.org.tr/ebced" target="_blank" rel="noopener">TDV İslâm Ansiklopedisi, “Ebced”</a>.</p>
+      </section>
+    </div>
+  </dialog>
+
   <div class="pop" id="pop" role="status" hidden></div>
   <div class="badge" id="badge" hidden></div>
   <div class="toast" id="toast" role="status" hidden></div>
 
-  <script type="module" src="app.js?v=1"></script>
+  <script type="module" src="app.js?v=3"></script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 import {
   LETTERS, GROUPS, SYSTEMS, DEFAULT_OPTIONS, analyze, tokenize, normalize, isLetter, digitalRoot,
-} from './ebced.js?v=1';
+} from './ebced.js?v=2';
+import { convertText, hasLatin } from './latin.js?v=1';
 
 const $ = (id) => document.getElementById(id);
 const fmt = new Intl.NumberFormat('tr-TR');
@@ -11,6 +12,7 @@ const SAMPLES = {
   tevhid: 'لَا إِلَٰهَ إِلَّا اللَّهُ مُحَمَّدٌ رَسُولُ اللَّهِ',
   ihlas: 'قُلْ هُوَ اللَّهُ أَحَدٌ ۝ اللَّهُ الصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ',
   fetih: 'بَلْدَةٌ طَيِّبَةٌ',
+  latin: 'Ahmet Mehmet Ayşe Fatma',
 };
 const NAMES = Object.fromEntries(LETTERS.map(([ch, , name]) => [ch, name]));
 const ORDER = Object.fromEntries(LETTERS.map(([ch], i) => [ch, i]));
@@ -34,6 +36,9 @@ const state = {
   opt: { ...DEFAULT_OPTIONS, ...store.get('ebced:opt', {}) },
   selection: null, // { text, from: 'reader' | 'input' | 'word' }
   marked: null, // vurgulanan kelimenin iskeleti
+  eff: '', // hesaba giren metin (Latin harfli kelimeler çevrilmiş)
+  latin: [], // çevrilen Latin harfli kelimeler
+  overrides: store.get('ebced:latin', {}), // kullanıcının düzelttiği yazılışlar { anahtar: yazılış }
 };
 
 const el = {
@@ -45,7 +50,7 @@ const el = {
   words: $('words'), wordsMeta: $('words-meta'), wordSort: $('word-sort'),
   letters: $('letters'), lettersCount: $('letters-count'), lettersTotal: $('letters-total'),
   unknown: $('unknown-note'), kbd: $('kbd'), pop: $('pop'), badge: $('badge'), toast: $('toast'),
-  optSummary: $('opt-summary'),
+  optSummary: $('opt-summary'), latin: $('latin'), latinRows: $('latin-rows'), latinMore: $('latin-more'),
 };
 
 /** Kelimenin harekesiz iskeleti: aynı kelimenin harekeli/harekesiz yazımları bir arada sayılır. */
@@ -53,10 +58,17 @@ const skeleton = (w) => [...normalize(w)].filter(isLetter).join('');
 
 // ---------------------------------------------------------------- hesap ve çizim
 
-function render({ textChanged = false } = {}) {
+/** Hesaba giren metni kurar: Latin harfli kelimeler (ayar açıksa) Arap harfli karşılıklarıyla değiştirilir. */
+function compute() {
+  const r = state.opt.latin === 'convert' && hasLatin(state.text) ? convertText(state.text, state.overrides) : null;
+  state.eff = r ? r.text : state.text;
+  state.latin = r ? r.items : [];
+}
+
+function render({ textChanged = false, latin = textChanged } = {}) {
   const { opt } = state;
-  const res = analyze(state.text, opt);
-  const tokens = tokenize(state.text);
+  const res = analyze(state.eff, opt);
+  const tokens = tokenize(state.eff);
   const words = tokens.filter((t) => t.word);
 
   el.total.textContent = n(res.total);
@@ -73,7 +85,7 @@ function render({ textChanged = false } = {}) {
     b.setAttribute('aria-checked', String(key === opt.system));
     b.title = sys.note;
     b.dataset.sys = key;
-    b.innerHTML = `<span>${sys.short}</span><b>${n(analyze(state.text, { ...opt, system: key }).total)}</b>`;
+    b.innerHTML = `<span>${sys.short}</span><b>${n(analyze(state.eff, { ...opt, system: key }).total)}</b>`;
     return b;
   }));
 
@@ -84,6 +96,7 @@ function render({ textChanged = false } = {}) {
   }
 
   if (textChanged) renderReader(tokens);
+  if (latin) renderLatin();
   renderWords(words);
   renderLetters(res);
   renderSelection();
@@ -193,6 +206,91 @@ function renderSelection() {
   el.selBreakdown.replaceChildren(...chips);
 }
 
+// ---------------------------------------------------------------- Latin harfli kelimeler
+
+function renderLatin() {
+  const items = state.latin;
+  el.latin.hidden = !items.length;
+  if (!items.length) return;
+  const LIMIT = 80;
+  el.latinRows.replaceChildren(...items.slice(0, LIMIT).map(latinRow));
+  el.latinMore.hidden = items.length <= LIMIT;
+  el.latinMore.textContent = `… ve ${n(items.length - LIMIT)} kelime daha (hepsi hesaba katıldı)`;
+}
+
+function latinRow(it) {
+  const row = document.createElement('div');
+  row.className = 'lr';
+  row.dataset.key = it.key;
+  row.innerHTML = '<span class="lr-src"></span><span class="lr-arrow" aria-hidden="true">→</span>'
+    + '<input class="lr-ar" dir="rtl" lang="ar" spellcheck="false" autocomplete="off">'
+    + '<b class="lr-val"></b><span class="tag"></span>'
+    + '<button type="button" class="link lr-reset">öneriye dön</button><span class="lr-alts"></span>';
+  row.querySelector('.lr-src').textContent = it.latin;
+  if (it.count > 1) row.querySelector('.lr-src').insertAdjacentHTML('beforeend', ` <i>×${it.count}</i>`);
+  const input = row.querySelector('input');
+  input.value = it.ar;
+  input.setAttribute('aria-label', `${it.latin}: Arap harfiyle yazılışı`);
+  const alts = row.querySelector('.lr-alts');
+  if (it.alts.length > 1) {
+    for (const a of it.alts) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'alt';
+      b.lang = 'ar';
+      b.dataset.ar = a;
+      b.title = `${n(analyze(a, state.opt).total)}`;
+      b.textContent = a;
+      alts.append(b);
+    }
+  }
+  updateLatinRow(row, it);
+  return row;
+}
+
+function updateLatinRow(row, it) {
+  row.querySelector('.lr-val').textContent = `= ${n(analyze(it.ar, state.opt).total)}`;
+  const tag = row.querySelector('.tag');
+  const kind = it.edited ? 'edit' : it.source === 'tahmin' ? 'guess' : 'dict';
+  tag.className = `tag ${kind}`;
+  tag.textContent = it.edited ? (it.alts.includes(it.ar) ? 'seçildi' : 'düzeltildi') : it.source;
+  tag.title = { edit: 'Yazılışı siz değiştirdiniz', guess: 'Sözlükte yok; yazım kurallarıyla tahmin edildi, kontrol edin', dict: 'Sözlükteki yazılış' }[kind];
+  row.querySelector('.lr-reset').hidden = !it.edited;
+  for (const b of row.querySelectorAll('.alt')) b.setAttribute('aria-pressed', String(b.dataset.ar === it.ar));
+}
+
+let overrideTimer;
+function setOverride(key, ar, { rerenderPanel = true } = {}) {
+  const it = state.latin.find((x) => x.key === key);
+  if (ar === null || (it && ar === it.suggestion)) delete state.overrides[key];
+  else state.overrides[key] = ar;
+  clearTimeout(overrideTimer);
+  overrideTimer = setTimeout(() => store.set('ebced:latin', state.overrides), 300);
+  state.selection = null;
+  compute();
+  render({ textChanged: true, latin: rerenderPanel });
+  if (!rerenderPanel) {
+    const row = el.latinRows.querySelector(`.lr[data-key="${CSS.escape(key)}"]`);
+    const cur = state.latin.find((x) => x.key === key);
+    if (row && cur) updateLatinRow(row, cur);
+  }
+}
+
+el.latinRows.addEventListener('input', (e) => {
+  const input = e.target.closest('.lr-ar');
+  if (input) setOverride(input.closest('.lr').dataset.key, input.value.trim(), { rerenderPanel: false });
+});
+el.latinRows.addEventListener('click', (e) => {
+  const row = e.target.closest('.lr');
+  if (!row) return;
+  if (e.target.closest('.alt')) setOverride(row.dataset.key, e.target.closest('.alt').dataset.ar);
+  if (e.target.closest('.lr-reset')) setOverride(row.dataset.key, null);
+});
+$('btn-latin-apply').addEventListener('click', () => {
+  setText(state.eff);
+  toast('Latin harfli kelimeler Arap harfiyle yazıldı.');
+});
+
 function renderOptSummary() {
   const changed = Object.keys(DEFAULT_OPTIONS).filter((k) => k !== 'system' && state.opt[k] !== DEFAULT_OPTIONS[k]).length;
   el.optSummary.textContent = changed ? `${changed} ayar değişti` : 'varsayılan';
@@ -218,6 +316,7 @@ function setText(text, { fromInput = false } = {}) {
   state.selection = null;
   state.marked = null;
   hideBadge();
+  compute();
   render({ textChanged: true });
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => store.set('ebced:text', state.text), 300);
@@ -270,9 +369,14 @@ for (const s of document.querySelectorAll('[data-opt]')) {
 $('btn-reset').addEventListener('click', () => setOpt({ ...DEFAULT_OPTIONS, system: state.opt.system }));
 
 function setOpt(patch) {
+  const latinChanged = 'latin' in patch && patch.latin !== state.opt.latin;
   state.opt = { ...state.opt, ...patch };
   store.set('ebced:opt', state.opt);
-  render();
+  if (latinChanged) {
+    state.selection = null;
+    compute();
+  }
+  render({ textChanged: latinChanged, latin: true });
   repositionBadge();
 }
 
@@ -357,7 +461,8 @@ function onSelectionChange() {
   if (document.activeElement === el.text) {
     const { selectionStart: a, selectionEnd: b } = el.text;
     if (a !== b) {
-      const text = el.text.value.slice(a, b);
+      const raw = el.text.value.slice(a, b);
+      const text = state.opt.latin === 'convert' && hasLatin(raw) ? convertText(raw, state.overrides).text : raw;
       if (state.selection?.text !== text || state.selection.from !== 'input') {
         state.selection = { text, from: 'input' };
         renderSelection();
@@ -521,9 +626,84 @@ function toast(msg) {
   toast.t = setTimeout(() => { el.toast.hidden = true; }, 2200);
 }
 
+// ---------------------------------------------------------------- Ebced nedir?
+
+const learn = $('learn');
+let learnReady = false;
+
+/** Örnek metni harf harf, kelime toplamlarıyla gösterir (varsayılan kurallarla). */
+function exampleBreakdown(box) {
+  const words = tokenize(box.dataset.example).filter((t) => t.word);
+  const wrap = document.createElement('div');
+  wrap.className = 'breakdown';
+  wrap.dir = 'rtl';
+  let total = 0;
+  for (const w of words) {
+    const res = analyze(w.text, DEFAULT_OPTIONS);
+    total += res.total;
+    const g = document.createElement('span');
+    g.className = 'word-sum';
+    for (const l of res.letters) {
+      const c = document.createElement('span');
+      c.className = 'lt';
+      c.innerHTML = `<b lang="ar"></b><small>${n(l.value)}</small>`;
+      c.querySelector('b').textContent = l.ch;
+      g.append(c);
+    }
+    if (words.length > 1) g.insertAdjacentHTML('beforeend', `<small class="muted">${n(res.total)}</small>`);
+    wrap.append(g);
+  }
+  const eq = Object.assign(document.createElement('span'), { className: 'eq', textContent: `= ${n(total)}` });
+  box.replaceChildren(wrap, eq);
+  if (box.dataset.sample) {
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: 'btn small', textContent: 'Metne al' });
+    b.addEventListener('click', () => {
+      setText(SAMPLES[box.dataset.sample]);
+      learn.close();
+      el.reader.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    });
+    box.append(b);
+  }
+}
+
+function openLearn() {
+  if (!learnReady) {
+    learnReady = true;
+    $('learn-groups').replaceChildren(...GROUPS.map(([name, word]) => {
+      const d = document.createElement('div');
+      d.className = 'lg';
+      d.innerHTML = `<b lang="ar">${word}</b><span>${name}</span><small>${[...word].map((ch) => n(LETTERS[ORDER[ch]][1])).join(' · ')}</small>`;
+      return d;
+    }));
+    for (const box of learn.querySelectorAll('[data-example]')) exampleBreakdown(box);
+  }
+  if (!learn.open) learn.showModal();
+  learn.querySelector('.learn-body').scrollTop = 0;
+}
+
+for (const b of document.querySelectorAll('[data-open-learn]')) b.addEventListener('click', openLearn);
+$('learn-close').addEventListener('click', () => learn.close());
+learn.addEventListener('click', (e) => { if (e.target === learn) learn.close(); }); // arka plana tıklama
+learn.querySelector('.learn-toc').addEventListener('click', (e) => {
+  const a = e.target.closest('a');
+  if (!a) return;
+  e.preventDefault(); // #t= paylaşım bağlantısı bozulmasın
+  learn.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+for (const b of learn.querySelectorAll('[data-goto-tab]')) {
+  b.addEventListener('click', () => {
+    learn.close();
+    const tab = $(b.dataset.gotoTab);
+    selectTab(tab);
+    tab.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  });
+}
+window.addEventListener('hashchange', () => { if (location.hash === '#nedir') openLearn(); });
+
 // ---------------------------------------------------------------- başlangıç
 
 if (store.get('ebced:kbd', false)) $('btn-kbd').click();
 const savedTab = tabs.find((t) => t.id === store.get('ebced:tab', ''));
 if (savedTab) selectTab(savedTab);
 setText(textFromHash() ?? store.get('ebced:text', SAMPLES.besmele));
+if (location.hash === '#nedir') openLearn();
