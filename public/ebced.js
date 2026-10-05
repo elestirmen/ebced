@@ -32,10 +32,9 @@ export const DEFAULT_OPTIONS = {
   system: 'kebir',
   taMarbuta: 400, // ة: açık te gibi (TDV) ya da he gibi 5
   hamza: 1, // tek başına ء: elif gibi 1 ya da 0
-  hamzaSeat: 'carrier', // ؤ ئ: taşıyıcı harf (6/10) ya da elif gibi (1)
+  hamzaSeat: 'alif', // ؤ ئ: elif gibi 1 (TDV: "kürsüsü ne olursa olsun elif") ya da taşıyıcı harf (6/10)
   madda: 1, // آ: tek elif 1 ya da iki elif 2
   shadda: 'once', // şeddeli harf: bir kez ya da iki kez
-  latin: 'convert', // Latin harfli kelimeler: Arap harfine çevrilir ya da hesaba katılmaz (arayüz ayarı)
 };
 
 // Harf varyantları → temel harf. Değeri seçeneğe bağlı olanlar (ة ء ؤ ئ آ) ayrıca ele alınır.
@@ -49,7 +48,7 @@ const VARIANTS = {
 };
 const SPECIAL = new Set(['ة', 'ۃ', 'ء', 'ؤ', 'ئ', 'ٶ', 'ٸ', 'آ']);
 
-// Harekeler, tenvin, şedde, cezm, hançerî elif ve Kur’an işaretleri sayılmaz.
+// Harekeler, tenvin, şedde, cezm, hançerî elif, Kur’an işaretleri, keşide ve ZWNJ/ZWJ sayılmaz (kelimenin parçasıdır).
 const MARK_RE = /[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ࣓-ࣿـ‌‍]/;
 const SHADDA = 'ّ';
 

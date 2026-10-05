@@ -4,12 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Ebced — Arapça metin ebced hesabı</title>
-  <meta name="description" content="Arapça metnin ebced (cümel) değerini hesaplayın; metnin bir kısmını fareyle seçerek o kısmın değerini anında görün.">
+  <meta name="description" content="Arapça metnin ebced (cümel) değerini hesaplayın; metnin bir kısmını fareyle seçerek o kısmın değerini anında görün. Latin harfle yazılan isimler Arap harfine çevrilir.">
+  <meta name="theme-color" content="#0d5f59">
+  <meta property="og:title" content="Ebced — Arapça metin ebced hesabı">
+  <meta property="og:description" content="Metnin ya da seçilen kısmın ebced değeri; Latin harfle yazılan isimlerin Arap harfli karşılığı ve değeri.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://ebced.perinet.org/">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
   <header class="top">
@@ -48,7 +53,8 @@
           <div class="latin-head">
             <div>
               <b>Latin harfle yazılanlar</b>
-              <span class="muted">Arap harfiyle yazılışı önerildi ve hesaba katıldı. Yanlışsa kutudan düzeltin.</span>
+              <span class="muted">Arap harfiyle yazılışı önerildi ve hesaba katıldı. Türkçe ebced geleneğine uyularak isim sonundaki
+                <span lang="ar">ة</span> yerine <span lang="ar">ه</span> (5) alınır; Arapça yazılış seçeneklerde. Yanlışsa kutudan düzeltin.</span>
             </div>
             <button type="button" class="btn small" id="btn-latin-apply">Metne Arap harfiyle yaz</button>
           </div>
@@ -111,6 +117,7 @@
       <section class="card c-total" aria-labelledby="h-total">
         <h2 id="h-total">Toplam <span class="sys-label" id="total-sys">Kebîr</span></h2>
         <output class="big" id="total" aria-live="polite">0</output>
+        <p class="muted hicri" id="hicri" hidden></p>
         <dl class="stats">
           <div><dt>Harf</dt><dd id="st-letters">0</dd></div>
           <div><dt>Kelime</dt><dd id="st-words">0</dd></div>
@@ -155,8 +162,8 @@
           </label>
           <label><span>Hemzeli vav / ye <b lang="ar">ؤ ئ</b></span>
             <select data-opt="hamzaSeat">
-              <option value="carrier">Taşıyıcı harf — 6 / 10</option>
               <option value="alif">Elif gibi — 1</option>
+              <option value="carrier">Taşıyıcı harf — 6 / 10</option>
             </select>
           </label>
           <label><span>Medli elif <b lang="ar">آ</b></span>
@@ -172,8 +179,9 @@
             </select>
           </label>
         </div>
-        <p class="note">Varsayılanlar TDV İslâm Ansiklopedisi’ndeki kurala göredir: <span lang="ar">ة</span> açık te,
-          <span lang="ar">آ</span> ve <span lang="ar">ء</span> elif sayılır. Harekeler, tenvin ve hançerî elif hesaba katılmaz.
+        <p class="note">Varsayılanlar TDV İslâm Ansiklopedisi’ndeki kurala göredir: <span lang="ar">ة</span> açık te;
+          <span lang="ar">آ</span> ve hemze, üzerinde durduğu harf ne olursa olsun (<span lang="ar">ء أ ؤ ئ</span>), elif sayılır.
+          Harekeler, tenvin ve hançerî elif hesaba katılmaz.
           <button type="button" class="link" id="btn-reset">Varsayılana dön</button></p>
       </details>
     </aside>
@@ -228,9 +236,10 @@
           (üstün, esre, ötre), tenvin ve cezm sayılmaz; şeddeli harf bir kez sayılır.</p>
         <div class="learn-ex" data-example="محمد"></div>
         <div class="learn-ex" data-example="بسم الله الرحمن الرحيم" data-sample="besmele"></div>
-        <p>Bazı harflerde gelenekler ayrılır: kapalı te (<span lang="ar">ة</span>) çoğunlukla açık te gibi 400 sayılır,
-          kimi hesaplarda he gibi 5; hemze (<span lang="ar">ء</span>) ve medli elif (<span lang="ar">آ</span>) elif gibi 1
-          sayılır. Sayfadaki <b>Hesap ayarları</b> bu tercihleri değiştirmenizi sağlar.</p>
+        <p>Bazı harflerde gelenekler ayrılır: kapalı te (<span lang="ar">ة</span>) Arapça kelimelerde açık te gibi 400 sayılır;
+          Türkçe isimlerde ise Osmanlıca yazımla <span lang="ar">ه</span> yazılıp 5 sayılır (Fatma: <span lang="ar">فاطمه</span> 135,
+          <span lang="ar">فاطمة</span> 530). Hemze, üzerinde durduğu harf ne olursa olsun (<span lang="ar">ء أ ؤ ئ</span>), ve medli elif
+          (<span lang="ar">آ</span>) elif gibi 1 sayılır. Sayfadaki <b>Hesap ayarları</b> bu tercihleri değiştirmenizi sağlar.</p>
       </section>
 
       <section id="l-kullanim">
@@ -251,7 +260,8 @@
       <section id="l-sistemler">
         <h3>Hesap sistemleri</h3>
         <dl class="learn-dl">
-          <dt>Cümel-i kebîr</dt><dd>Standart değerler (1–1000). Tarih düşürmede kullanılan tek sistemdir.</dd>
+          <dt>Cümel-i kebîr</dt><dd>Standart değerler (1–1000). Tarih düşürmede kullanılan tek sistemdir; sayfa toplamın
+            yanında hicrî yılın milâdî karşılığını da gösterir.</dd>
           <dt>Cümel-i sağîr</dt><dd>Her harfin değerinden, kendisinden küçük bir sayı kalana kadar 12 çıkarılır
             (12’ye bölümünden kalan): kef 20 → 8; sin 60 ve hı 600 → 0.</dd>
           <dt>Mağribî</dt><dd>Kuzey Afrika ve Endülüs’te kullanılan sıralama; altı harfin değeri farklıdır
@@ -268,8 +278,8 @@
           <li>Latin harfle yazılan isimler Arap harfine çevrilirken önce sözlüğe bakılır; sözlükte olmayanlar
             <i>tahmin</i> diye işaretlenir. Aynı ses farklı harflerle yazılabildiği için (h → <span lang="ar">ح ه خ</span>)
             yazılışı kontrol edin.</li>
-          <li>Aynı kelimenin farklı yazımları (ör. <span lang="ar">فاطمة</span> / Osmanlıca <span lang="ar">فاطمه</span>)
-            farklı değer verir.</li>
+          <li>Aynı kelimenin farklı yazımları farklı değer verir (Osmanlıca <span lang="ar">فاطمه</span> 135, Arapça
+            <span lang="ar">فاطمة</span> 530). Bir kaynakla karşılaştırırken aynı yazımı ve aynı kuralları kullandığınızdan emin olun.</li>
           <li>Ebced bir yazı ve sayı sistemidir. Ondan gelecek, kader ya da kişilik çıkarmaya yönelik yorumların bilimsel
             bir dayanağı yoktur; bu tür yorumlar tarih boyunca tartışılmış, İbn Haldun gibi âlimlerce eleştirilmiştir.</li>
         </ul>
@@ -282,6 +292,6 @@
   <div class="badge" id="badge" hidden></div>
   <div class="toast" id="toast" role="status" hidden></div>
 
-  <script type="module" src="app.js?v=3"></script>
+  <script type="module" src="app.js?v=4"></script>
 </body>
 </html>

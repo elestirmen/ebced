@@ -1,7 +1,10 @@
 import {
   LETTERS, GROUPS, SYSTEMS, DEFAULT_OPTIONS, analyze, tokenize, normalize, isLetter, digitalRoot,
-} from './ebced.js?v=2';
-import { convertText, hasLatin } from './latin.js?v=1';
+} from './ebced.js?v=3';
+import { convertText, hasLatin } from './latin.js?v=2';
+
+// Arayüz ayarları: hesap seçenekleri + Latin harfli kelimelerin ne yapılacağı (hesap modülüne girmez).
+const UI_DEFAULTS = { ...DEFAULT_OPTIONS, latin: 'convert' };
 
 const $ = (id) => document.getElementById(id);
 const fmt = new Intl.NumberFormat('tr-TR');
@@ -33,7 +36,7 @@ const store = {
 
 const state = {
   text: '',
-  opt: { ...DEFAULT_OPTIONS, ...store.get('ebced:opt', {}) },
+  opt: { ...UI_DEFAULTS, ...store.get('ebced:opt', {}) },
   selection: null, // { text, from: 'reader' | 'input' | 'word' }
   marked: null, // vurgulanan kelimenin iskeleti
   eff: '', // hesaba giren metin (Latin harfli kelimeler çevrilmiş)
@@ -44,7 +47,7 @@ const state = {
 const el = {
   text: $('text'), reader: $('reader'), readerEmpty: $('reader-empty'),
   total: $('total'), totalSys: $('total-sys'), systems: $('systems'),
-  stLetters: $('st-letters'), stWords: $('st-words'), stRoot: $('st-root'),
+  stLetters: $('st-letters'), stWords: $('st-words'), stRoot: $('st-root'), hicri: $('hicri'),
   selEmpty: $('sel-empty'), selBody: $('sel-body'), selText: $('sel-text'), selTotal: $('sel-total'),
   selMeta: $('sel-meta'), selBreakdown: $('sel-breakdown'), selClear: $('btn-sel-clear'),
   words: $('words'), wordsMeta: $('words-meta'), wordSort: $('word-sort'),
@@ -52,6 +55,9 @@ const el = {
   unknown: $('unknown-note'), kbd: $('kbd'), pop: $('pop'), badge: $('badge'), toast: $('toast'),
   optSummary: $('opt-summary'), latin: $('latin'), latinRows: $('latin-rows'), latinMore: $('latin-more'),
 };
+
+/** Hicrî yılın başladığı milâdî yıl (yaklaşık; tarih düşürme için yeterli). */
+const miladi = (h) => Math.floor(h * 0.970224 + 621.5774);
 
 /** Kelimenin harekesiz iskeleti: aynı kelimenin harekeli/harekesiz yazımları bir arada sayılır. */
 const skeleton = (w) => [...normalize(w)].filter(isLetter).join('');
@@ -76,6 +82,14 @@ function render({ textChanged = false, latin = textChanged } = {}) {
   el.stLetters.textContent = n(res.letters.length);
   el.stWords.textContent = n(words.length);
   el.stRoot.textContent = res.total ? digitalRoot(res.total) : 0;
+
+  // Tarih düşürmede toplam hicrî yıldır; milâdî karşılığını göster.
+  const showYear = opt.system === 'kebir' && res.total >= 1 && res.total <= 1500;
+  el.hicri.hidden = !showYear;
+  if (showYear) {
+    const y = miladi(res.total);
+    el.hicri.textContent = `Tarih düşürme: hicrî ${n(res.total)} ≈ milâdî ${y}/${String((y + 1) % 100).padStart(2, '0')}`;
+  }
 
   el.systems.replaceChildren(...Object.entries(SYSTEMS).map(([key, sys]) => {
     const b = document.createElement('button');
@@ -188,7 +202,7 @@ function renderSelection() {
   const chars = [...normalize(sel.text)];
   let prevIndex = -1;
   for (const l of res.letters.slice(0, LIMIT)) {
-    if (prevIndex >= 0 && chars.slice(prevIndex + 1, l.index).some((c) => /\s|[^\p{L}\p{M}ـ]/u.test(c))) {
+    if (prevIndex >= 0 && chars.slice(prevIndex + 1, l.index).some((c) => /\s|[^\p{L}\p{M}\u0640]/u.test(c))) {
       chips.push(Object.assign(document.createElement('span'), { className: 'lt sp' }));
     }
     prevIndex = l.index;
@@ -292,7 +306,7 @@ $('btn-latin-apply').addEventListener('click', () => {
 });
 
 function renderOptSummary() {
-  const changed = Object.keys(DEFAULT_OPTIONS).filter((k) => k !== 'system' && state.opt[k] !== DEFAULT_OPTIONS[k]).length;
+  const changed = Object.keys(UI_DEFAULTS).filter((k) => k !== 'system' && state.opt[k] !== UI_DEFAULTS[k]).length;
   el.optSummary.textContent = changed ? `${changed} ayar değişti` : 'varsayılan';
   for (const s of document.querySelectorAll('[data-opt]')) s.value = String(state.opt[s.dataset.opt]);
 }
@@ -366,7 +380,7 @@ for (const s of document.querySelectorAll('[data-opt]')) {
     setOpt({ [s.dataset.opt]: /^\d+$/.test(v) ? Number(v) : v });
   });
 }
-$('btn-reset').addEventListener('click', () => setOpt({ ...DEFAULT_OPTIONS, system: state.opt.system }));
+$('btn-reset').addEventListener('click', () => setOpt({ ...UI_DEFAULTS, system: state.opt.system }));
 
 function setOpt(patch) {
   const latinChanged = 'latin' in patch && patch.latin !== state.opt.latin;
