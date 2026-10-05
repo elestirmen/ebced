@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ebced — Arapça metin ebced hesabı</title>
+  <meta name="description" content="Arapça metnin ebced (cümel) değerini hesaplayın; metnin bir kısmını fareyle seçerek o kısmın değerini anında görün.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="mark" lang="ar" aria-hidden="true">ابجد</span>
+      <div>
+        <h1>Ebced</h1>
+        <p>Arapça metnin ebced değerini hesaplayın. Metnin bir kısmını fareyle seçin, o kısmın değeri anında görünsün.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <div class="col col-main">
+      <section class="card c-input" aria-labelledby="h-input">
+        <div class="card-head">
+          <h2 id="h-input">Metin</h2>
+          <div class="tools">
+            <button type="button" class="btn ghost" id="btn-kbd" aria-expanded="false" aria-controls="kbd">Harf klavyesi</button>
+            <button type="button" class="btn ghost" id="btn-share">Bağlantı</button>
+            <button type="button" class="btn ghost" id="btn-clear">Temizle</button>
+          </div>
+        </div>
+        <div class="samples" role="group" aria-label="Örnek metinler">
+          <span class="muted">Örnek:</span>
+          <button type="button" class="chip" data-sample="besmele">Besmele</button>
+          <button type="button" class="chip" data-sample="tevhid">Kelime-i tevhid</button>
+          <button type="button" class="chip" data-sample="ihlas">İhlâs</button>
+          <button type="button" class="chip" data-sample="fetih">Beldetün tayyibetün</button>
+        </div>
+        <textarea id="text" dir="rtl" lang="ar" spellcheck="false" rows="3"
+          placeholder="Arapça metni buraya yazın ya da yapıştırın…" aria-label="Arapça metin"></textarea>
+        <div class="kbd" id="kbd" hidden></div>
+        <p class="note" id="unknown-note" hidden></p>
+      </section>
+
+      <section class="card c-read" aria-labelledby="h-read">
+        <div class="card-head">
+          <h2 id="h-read">Okuma ve seçim</h2>
+          <span class="muted hint"><span class="on-hover">Kelimenin üzerine gelin ya da fareyle bir kısmı seçin</span><span class="on-touch">Kelimeye dokunun ya da basılı tutup bir kısmı seçin</span></span>
+        </div>
+        <div class="reader" id="reader" dir="rtl" lang="ar"></div>
+        <p class="empty" id="reader-empty">Metin girdiğinizde burada kelime kelime görünecek.</p>
+      </section>
+
+      <section class="card c-tabs">
+        <div class="tabs" role="tablist" aria-label="Ayrıntılar">
+          <button type="button" role="tab" id="tab-words" aria-controls="panel-words" aria-selected="true">Kelimeler</button>
+          <button type="button" role="tab" id="tab-letters" aria-controls="panel-letters" aria-selected="false" tabindex="-1">Harf dağılımı</button>
+          <button type="button" role="tab" id="tab-table" aria-controls="panel-table" aria-selected="false" tabindex="-1">Ebced cetveli</button>
+        </div>
+        <div role="tabpanel" id="panel-words" aria-labelledby="tab-words">
+          <div class="panel-tools">
+            <span class="muted" id="words-meta"></span>
+            <label class="inline">Sırala
+              <select id="word-sort">
+                <option value="order">Metindeki sıra</option>
+                <option value="value">Değer (büyükten küçüğe)</option>
+                <option value="count">Tekrar sayısı</option>
+              </select>
+            </label>
+          </div>
+          <div class="words" id="words"></div>
+        </div>
+        <div role="tabpanel" id="panel-letters" aria-labelledby="tab-letters" hidden>
+          <div class="table-wrap">
+            <table class="ltable">
+              <thead><tr><th>Harf</th><th>Adı</th><th class="num">Değer</th><th class="num">Adet</th><th class="num">Toplam</th></tr></thead>
+              <tbody id="letters"></tbody>
+              <tfoot><tr><td colspan="3">Genel toplam</td><td class="num" id="letters-count">0</td><td class="num" id="letters-total">0</td></tr></tfoot>
+            </table>
+          </div>
+        </div>
+        <div role="tabpanel" id="panel-table" aria-labelledby="tab-table" hidden>
+          <div class="groups" id="groups"></div>
+          <p class="note">Mağribî sıralamada altı harf farklıdır: <span lang="ar">ص</span> 60, <span lang="ar">ض</span> 90,
+            <span lang="ar">س</span> 300, <span lang="ar">ظ</span> 800, <span lang="ar">غ</span> 900, <span lang="ar">ش</span> 1000.
+            Cümel-i sağîrde her harfin değeri 12’ye bölünür, kalan alınır. Farsça/Osmanlıca <span lang="ar">پ چ ژ گ ڭ</span>
+            harfleri <span lang="ar">ب ج ز ك ك</span> gibi sayılır.</p>
+        </div>
+      </section>
+    </div>
+
+    <aside class="col col-side">
+      <section class="card c-total" aria-labelledby="h-total">
+        <h2 id="h-total">Toplam <span class="sys-label" id="total-sys">Kebîr</span></h2>
+        <output class="big" id="total" aria-live="polite">0</output>
+        <dl class="stats">
+          <div><dt>Harf</dt><dd id="st-letters">0</dd></div>
+          <div><dt>Kelime</dt><dd id="st-words">0</dd></div>
+          <div><dt>Sayı kökü</dt><dd id="st-root">0</dd></div>
+        </dl>
+        <div class="systems" id="systems" role="radiogroup" aria-label="Hesap sistemi"></div>
+      </section>
+
+      <section class="card c-sel" aria-labelledby="h-sel">
+        <div class="card-head">
+          <h2 id="h-sel">Seçim</h2>
+          <button type="button" class="btn ghost small" id="btn-sel-clear" hidden>Kaldır</button>
+        </div>
+        <div id="sel-empty" class="empty">Metnin bir kısmını seçin ya da bir kelimeye tıklayın.</div>
+        <div id="sel-body" hidden>
+          <p class="sel-text" id="sel-text" dir="rtl" lang="ar"></p>
+          <div class="sel-sum"><output class="big" id="sel-total">0</output><span class="muted" id="sel-meta"></span></div>
+          <div class="breakdown" id="sel-breakdown" dir="rtl"></div>
+        </div>
+      </section>
+
+      <details class="card c-opt" id="opts">
+        <summary><h2>Hesap ayarları</h2><span class="muted" id="opt-summary"></span></summary>
+        <div class="opt-grid">
+          <label><span>Tâ-i merbûta <b lang="ar">ة</b></span>
+            <select data-opt="taMarbuta">
+              <option value="400">Açık te gibi — 400</option>
+              <option value="5">He gibi — 5</option>
+            </select>
+          </label>
+          <label><span>Tek başına hemze <b lang="ar">ء</b></span>
+            <select data-opt="hamza">
+              <option value="1">Elif gibi — 1</option>
+              <option value="0">Sayılmaz — 0</option>
+            </select>
+          </label>
+          <label><span>Hemzeli vav / ye <b lang="ar">ؤ ئ</b></span>
+            <select data-opt="hamzaSeat">
+              <option value="carrier">Taşıyıcı harf — 6 / 10</option>
+              <option value="alif">Elif gibi — 1</option>
+            </select>
+          </label>
+          <label><span>Medli elif <b lang="ar">آ</b></span>
+            <select data-opt="madda">
+              <option value="1">Tek elif — 1</option>
+              <option value="2">İki elif — 2</option>
+            </select>
+          </label>
+          <label><span>Şeddeli harf <b lang="ar">ّ</b></span>
+            <select data-opt="shadda">
+              <option value="once">Bir kez (yazıldığı gibi)</option>
+              <option value="twice">İki kez (okunduğu gibi)</option>
+            </select>
+          </label>
+        </div>
+        <p class="note">Varsayılanlar TDV İslâm Ansiklopedisi’ndeki kurala göredir: <span lang="ar">ة</span> açık te,
+          <span lang="ar">آ</span> ve <span lang="ar">ء</span> elif sayılır. Harekeler, tenvin ve hançerî elif hesaba katılmaz.
+          <button type="button" class="link" id="btn-reset">Varsayılana dön</button></p>
+      </details>
+    </aside>
+
+  </main>
+
+  <footer class="foot">
+    <p>Hesap tamamen tarayıcınızda yapılır; metin hiçbir yere gönderilmez.</p>
+  </footer>
+
+  <div class="pop" id="pop" role="status" hidden></div>
+  <div class="badge" id="badge" hidden></div>
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script type="module" src="app.js?v=1"></script>
+</body>
+</html>

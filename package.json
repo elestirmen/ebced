@@ -1,0 +1,9 @@
+{
+  "name": "ebced",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "deploy": "node tools/deploy.mjs --env $HOME/.config/cloudflare/token.env,$HOME/.config/nginx-proxy-manager.env"
+  }
+}
